@@ -1,0 +1,55 @@
+install.packages("xgboost")
+# ============================================================================
+# BWS22803 PBL PROJECT: UPGRADED MODULE 2 (M2) - COMPLIANT WITH XGBOOST v3+
+# Group 5: Logistics & Supply Chain (Algorithm: XGBoost Engine Upgrade)
+# ============================================================================
+
+library(tidyverse)
+library(tidymodels)
+library(xgboost)
+
+cat("--- Starting Upgraded M2 Supervised Machine Learning (XGBoost v3+) ---\n")
+
+# 1. Format clean features into matrices as required by XGBoost v3
+X_train <- as.matrix(train_clean %>% select(-shipment_status))
+X_test  <- as.matrix(test_clean %>% select(-shipment_status))
+
+# XGBoost v3 handles classification natively via a clean factor array!
+y_train <- train_clean$shipment_status
+y_test  <- test_clean$shipment_status
+
+# 2. Train the Upgraded XGBoost Classifier Engine using new API arguments
+set.seed(42)
+xgb_model <- xgboost(
+  x = X_train, 
+  y = y_train, 
+  max_depth = 6,               # Controls the tree architectural depth limit
+  learning_rate = 0.1,         # Updated parameter name (formerly eta)
+  nrounds = 80,                # Number of sequential boosting iterations
+  verbosity = 0                # Updated parameter name (formerly verbose)
+)
+
+# 3. Generate Predictions Directly on the Test Matrix
+xgb_preds <- predict(xgb_model, X_test)
+
+# 4. Compute Performance Metrics
+xgb_cm <- table(Actual = y_test, Predicted = xgb_preds)
+xgb_accuracy <- sum(diag(xgb_cm)) / sum(xgb_cm)
+
+# ==========================================
+# 📊 PRINT PERFORMANCE RESULTS TO CONSOLE
+# ==========================================
+cat("\n--- Upgraded M2 Confusion Matrix ---\n")
+print(xgb_cm)
+
+cat("\n==========================================")
+cat("\n     UPGRADED M2 INFRASTRUCTURE SUMMARY   ")
+cat("\n==========================================")
+cat("\n  Algorithm Upgrade: XGBoost (v3 API Engine)")
+cat("\n  Testing Accuracy:  ", round(xgb_accuracy * 100, 2), "%")
+cat("\n==========================================\n")
+
+# 5. Extract and View Feature Gain Rankings
+cat("\nTop 5 Most Important Variables Driving the Upgraded Engine:\n")
+importance_matrix <- xgb.importance(model = xgb_model)
+print(head(importance_matrix, 5))
