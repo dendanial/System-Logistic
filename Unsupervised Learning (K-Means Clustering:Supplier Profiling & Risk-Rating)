@@ -1,6 +1,7 @@
 library(tidyverse)
 library(cluster)
 library(factoextra)
+library(ggrepel)
 #Agregate rate follow product category
 category_analysis <- New_df %>%
       group_by(category_name) %>%
@@ -54,7 +55,7 @@ fviz_cluster(kmeans_result,
                   box.padding = 0.6,       
                   point.padding = 0.4,    
                   color = "black",         
-                  fontface = "bold")      
+                  fontface = "bold") +      
   labs(title = "Product Category Risk Profile Segmentation",
        subtitle = "K-Means Clustering Analysis (k = 3 groups)",
        x = "Principal Component 1 (Dim 1)", 
