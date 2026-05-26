@@ -1,0 +1,55 @@
+library(tidyverse)
+library(cluster)
+library(factoextra)
+#Agregate rate follow product category
+category_analysis <- New_df %>%
+      group_by(category_name) %>%
+      summarise(
+          Avg_Shipping_Days = mean(shipping_days, na.rm = TRUE),
+          Avg_Sales = mean(sales, na.rm = TRUE),
+          Delayed_Rate = mean(delivery_status == "Delayed" , na.rm = TRUE),
+          Total_Orders = sum(order_item_quantity, na.rm = TRUE)
+      ) %>%
+      drop_na()
+#Separate Numerical Matrix & Scaling
+category_matrix <- category_analysis %>%
+      select(Avg_Shipping_Days, Delayed_Rate, Avg_Sales) %>%
+      scale()
+# Set row names 
+rownames(category_matrix) <- category_analysis$category_name
+# K-Means Clustering (Using k = 3)
+set.seed(42)
+kmeans_result <- kmeans(category_matrix, centers = 3, nstart = 25)
+# Combine Label Cluster into simple Data for Analysys
+category_profiles <- category_analysis %>%
+      mutate(Cluster = as.factor(kmeans_result$cluster))
+# Display Summary Table Of Risk Profile 
+category_risk_summary <- category_profiles %>%
+      group_by(Cluster) %>%
+      summarise(
+          Category_Numbers = n(),
+          Mean_Average_Days = round(mean(Avg_Shipping_Days), 1),
+          Average_Delay_Rate = round(mean(Delayed_Rate), 4),
+          Average_Sales = round(mean(Avg_Sales), 2)
+      )
+print(category_risk_summary)
+# Draw Cluster Graph
+fviz_cluster(kmeans_result, 
+             data = category_matrix,
+             ellipse.type = "convex",
+             geom = "point",               
+             palette = c("#2ECC71", "#F1C40F", "#E74C3C"), 
+             ggtheme = theme_minimal())  
+  geom_text_repel(aes(label = rownames(category_matrix)), 
+                  max.overlaps = Inf,      
+                  size = 3.0,              
+                  box.padding = 0.6,       
+                  point.padding = 0.4,    
+                  color = "black",         
+                  fontface = "bold")      
+  labs(title = "Product Category Risk Profile Segmentation",
+       subtitle = "K-Means Clustering Analysis (k = 3 groups)",
+       x = "Principal Component 1 (Dim 1)", 
+       y = "Principal Component 2 (Dim 2)") +
+  theme(plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 10, color = "gray30"))
