@@ -17,6 +17,14 @@ category_matrix <- category_analysis %>%
       scale()
 # Set row names 
 rownames(category_matrix) <- category_analysis$category_name
+# Determine Cluster Optimum using elbow method
+fviz_nbclust(category_matrix, kmeans, method = "wss") 
+  labs(title = "Optimal Cluster Evaluation: Elbow Method",
+       x = "Number of Clusters (k)", y = "Total Within-Cluster Sum of Squares")
+# Determine Cluster Optimum using Silhouette Method
+fviz_nbclust(category_matrix, kmeans, method = "silhouette") +
+  labs(title = "Optimal Cluster Evaluation: Silhouette Method",
+       x = "Number of Clusters (k)", y = "Average Silhouette Width")
 # K-Means Clustering (Using k = 3)
 set.seed(42)
 kmeans_result <- kmeans(category_matrix, centers = 3, nstart = 25)
